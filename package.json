@@ -1,0 +1,19 @@
+{
+  "name": "genspark-cloneoffline",
+  "version": "1.0.0",
+  "description": "A Genspark-style AI agent PWA that works online (live Wikipedia Sparkpages) and offline (local knowledge base + local copilot). Zero runtime dependencies.",
+  "main": "sw.js",
+  "scripts": {
+    "start": "python3 -m http.server 8080 --bind 0.0.0.0",
+    "test": "node test/engine.test.js && node test/ui.test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xavierhoolulu13-dotcom/genspark-clone-.git"
+  },
+  "keywords": ["pwa", "offline-first", "ai-agent", "genspark-clone", "vanilla-js"],
+  "license": "MIT",
+  "devDependencies": {
+    "jsdom": "^30.0.1"
+  }
+}

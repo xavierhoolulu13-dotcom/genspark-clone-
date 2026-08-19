@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Genspark — AI Agent Search (Clone)</title>
+<meta name="description" content="A Genspark-style AI agent that creates Sparkpages — works online and offline." />
+<meta name="theme-color" content="#0b0d12" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icons/icon-192.png" />
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+<div id="offline-banner" class="offline-banner hidden">
+  <span class="dot"></span> You're offline — running on the <b>local knowledge base</b>. Everything below still works.
+</div>
+
+<div class="shell">
+  <!-- Left icon rail -->
+  <nav class="rail" id="rail" aria-label="Main navigation">
+    <a class="rail-logo" href="#/" title="Genspark (clone)">
+      <img src="assets/icons/icon-192.png" alt="logo" />
+    </a>
+    <a class="rail-item" data-route="#/" href="#/">
+      <span class="ri">⌂</span><span class="rl">Search</span>
+    </a>
+    <a class="rail-item" data-route="#/autopilot" href="#/autopilot">
+      <span class="ri">✈</span><span class="rl">Autopilot</span>
+    </a>
+    <a class="rail-item" data-route="#/agents" href="#/agents">
+      <span class="ri">🤖</span><span class="rl">Agents</span>
+    </a>
+    <a class="rail-item" data-route="#/chat" href="#/chat">
+      <span class="ri">💬</span><span class="rl">AI Chat</span>
+    </a>
+    <a class="rail-item" data-route="#/library" href="#/library">
+      <span class="ri">📚</span><span class="rl">Sparkpages</span>
+    </a>
+    <div class="rail-spacer"></div>
+    <a class="rail-item" href="#" id="rail-install">
+      <span class="ri">⬇</span><span class="rl">Install</span>
+    </a>
+  </nav>
+
+  <!-- Main column -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <span class="wordmark">Genspark<span class="clone-badge">clone</span></span>
+      </div>
+      <div class="topbar-right">
+        <span class="chip credits" title="Demo credits">⚡ 80k</span>
+        <span class="chip" id="conn-badge" title="Connection status">● Online</span>
+        <span class="chip hidden sm-hide">US|EN</span>
+        <button class="btn ghost sm-hide" id="btn-drive">AI Drive</button>
+        <button class="btn ghost" id="btn-install-top">Download</button>
+        <button class="btn primary" id="btn-login">Log in</button>
+      </div>
+    </header>
+
+    <main id="view" class="view" tabindex="-1"></main>
+  </div>
+</div>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<div id="modal-root"></div>
+
+<template id="tpl-typing">
+  <div class="msg assistant typing"><span></span><span></span><span></span></div>
+</template>
+
+<script src="assets/js/kb.js"></script>
+<script src="assets/js/engine.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
