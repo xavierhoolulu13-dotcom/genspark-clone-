@@ -207,6 +207,8 @@ img { max-width: 100%; }
 .src-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .src-dot.live { background: var(--good); box-shadow: 0 0 8px var(--good); }
 .src-dot.local { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+.src-dot.factory { background: #c084fc; box-shadow: 0 0 8px #c084fc; }
+#factory-badge { color: #c084fc; border-color: rgba(192,132,252,.45); }
 .spark-title { font-size: 30px; letter-spacing: -.6px; margin: 6px 0 14px; line-height: 1.2; }
 .src-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 18px; }
 .src-chip {

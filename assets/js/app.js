@@ -225,6 +225,10 @@ function bindSearchBar() {
 
 function renderSparkPage(page) {
   const isLive = page.source === "live";
+  const dotCls = page.source === "live" ? "live" : page.source === "factory" ? "factory" : "local";
+  const genLine = page.source === "live" ? "🌐 live from the web"
+    : page.source === "factory" ? "🏭 live from your hoolulu-factory backend"
+    : "📦 100% offline from the local knowledge base";
   const saveBtn = isSaved(page.title)
     ? `<button class="btn ghost" disabled>✓ Saved for offline</button>`
     : `<button class="btn gradient" id="btn-save">⬇ Save offline</button>`;
@@ -240,7 +244,7 @@ function renderSparkPage(page) {
     <div class="spark-main">
       <div class="spark-head">${searchBarHTML(page.query)}</div>
       <div class="crumb" style="margin-top:16px">
-        <span class="src-dot ${isLive ? "live" : "local"}"></span>
+        <span class="src-dot ${dotCls}"></span>
         <span>Sparkpage</span><span>·</span>
         <span class="src">${esc(page.sourceLabel)}</span><span>·</span>
         <span>just now</span>
@@ -282,7 +286,7 @@ function renderSparkPage(page) {
         <div class="rel-q">${page.related.map(r => `<button class="q" data-q="${esc(r.title)}">${esc(r.title)}</button>`).join("")}</div>` : ""}
 
       <div class="spark-foot">
-        Generated ${isLive ? "🌐 live from the web" : "📦 100% offline from the local knowledge base"} · ${new Date(page.generatedAt).toLocaleTimeString()} ·
+        Generated ${genLine} · ${new Date(page.generatedAt).toLocaleTimeString()} ·
         This is a demo clone of Genspark's Sparkpage format — verify important information with primary sources.
       </div>
     </div>
@@ -359,9 +363,9 @@ function mountCopilot(slot, ctx) {
     input.value = "";
     const typing = document.getElementById("tpl-typing").content.firstElementChild.cloneNode(true);
     body.appendChild(typing); body.scrollTop = body.scrollHeight;
-    setTimeout(() => {
+    setTimeout(async () => {
       typing.remove();
-      const [text] = window.Copilot.respond(q, ctx, state.persona);
+      const [text] = await window.Copilot.respondAsync(q, ctx, state.persona);
       if (text === "__NAVHOME__") { go("/"); return; }
       if (text?.startsWith("__NAV__:")) { doSearch(text.slice(8)); return; }
       addMsg(text, "assistant");
@@ -528,10 +532,10 @@ function renderLibrary() {
     document.getElementById("lib-history").innerHTML = history.length
       ? history.filter(h => h.title.toLowerCase().includes(f) || h.q.toLowerCase().includes(f)).slice(0, 30).map(h => `
         <div class="lib-item" data-q="${esc(h.q)}">
-          <span class="l-emo">${h.source === "live" ? "🌐" : "📦"}</span>
+          <span class="l-emo">${h.source === "live" ? "🌐" : h.source === "factory" ? "🏭" : "📦"}</span>
           <div class="l-main"><div class="l-title">${esc(h.title)}</div>
           <div class="l-meta">searched “${esc(h.q)}” · ${timeAgo(h.ts)}</div></div>
-          <span class="l-badge">${h.source === "live" ? "live" : "offline"}</span>
+          <span class="l-badge">${h.source === "live" ? "live" : h.source === "factory" ? "factory" : "offline"}</span>
         </div>`).join("") || `<div class="empty">No history matches “${esc(filter)}”.</div>`
       : `<div class="empty">No searches yet — try the home page.</div>`;
 
@@ -592,6 +596,56 @@ function installFlow() {
 }
 document.getElementById("btn-install-top").onclick = installFlow;
 document.getElementById("rail-install").onclick = e => { e.preventDefault(); installFlow(); };
+
+/* ---------- hoolulu-factory backend settings ---------- */
+function setFactoryBadge(ok) {
+  const b = document.getElementById("factory-badge");
+  if (b) b.classList.toggle("hidden", !ok);
+}
+window.addEventListener("factory-status", e => setFactoryBadge(e.detail.ok));
+
+function backendSettings() {
+  const F = window.Factory;
+  const configured = F.enabled();
+  const root = modal(`
+    <h3>🏭 Backend — hoolulu-factory</h3>
+    <p>Point the clone at your running factory. When connected, search &amp; copilot go <b>factory → web → offline KB</b>. Endpoints it expects: <code>GET /api/health</code>, <code>POST /api/search</code>, <code>POST /api/chat</code>. Full contract in <code>FACTORY_API.md</code>.</p>
+    <div style="margin:14px 0 6px">
+      <input id="fac-url" placeholder="${F.DEFAULT_URL}" value="${configured ? esc(F.url()) : ""}"
+        style="width:100%;background:var(--panel);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 12px;font-size:14px;outline:none;font-family:inherit">
+    </div>
+    <p id="fac-status" style="min-height:20px;margin:6px 0 0">${F.online ? "🟢 Connected to " + esc(F.url()) : configured ? "🟡 Configured but not reachable right now" : "⚪ Not connected — runs in web/offline mode"}</p>
+    <div class="m-actions">
+      ${configured ? `<button class="btn ghost" id="fac-disc">Disconnect</button>` : ""}
+      <button class="btn" id="fac-test">Test connection</button>
+      <button class="btn primary" id="fac-save">Save</button>
+      <button class="btn ghost" data-close>Close</button>
+    </div>`);
+  const urlEl = root.querySelector("#fac-url");
+  const statusEl = root.querySelector("#fac-status");
+  root.querySelector("#fac-test").onclick = async () => {
+    const v = urlEl.value.trim() || F.DEFAULT_URL;
+    F.setUrl(v);
+    statusEl.textContent = "⏳ Probing " + v + " …";
+    const ok = await F.health(true);
+    statusEl.textContent = ok ? "🟢 Connected! Search & copilot now route through the factory." : "🔴 No response on " + v + " — is router/dashboard running? Check the port and CORS headers.";
+    toast(ok ? "🏭 Factory connected!" : "Couldn't reach the factory");
+  };
+  root.querySelector("#fac-save").onclick = async () => {
+    const v = urlEl.value.trim();
+    F.setUrl(v); // empty string disconnects
+    if (v) { await F.health(true); }
+    root.innerHTML = "";
+    toast(v ? "Backend saved: " + v : "Backend disconnected — web/offline mode");
+  };
+  root.querySelector("#fac-disc")?.addEventListener("click", async () => {
+    F.setUrl(""); setFactoryBadge(false);
+    document.getElementById("modal-root").innerHTML = "";
+    toast("Disconnected from hoolulu-factory.");
+  });
+}
+document.getElementById("btn-backend").onclick = backendSettings;
+
 document.getElementById("btn-drive").onclick = () =>
   modal(`<h3>📂 AI Drive</h3><p>Your Sparkpages library doubles as a personal knowledge drive — it's stored locally in this browser and readable offline. Manage it from “Sparkpages” in the rail.</p><div class="m-actions"><button class="btn primary" data-close>OK</button></div>`);
 document.getElementById("btn-login").onclick = () =>
@@ -606,5 +660,10 @@ if ("serviceWorker" in navigator) {
 }
 setConn(navigator.onLine);
 route();
+// if a factory backend was configured before, probe it on boot
+if (window.Factory?.enabled()) {
+  Factory.health(true).then(ok => { if (ok) toast("🏭 hoolulu-factory connected — factory brain is live."); });
+  setInterval(() => Factory.health(), 30000);
+}
 
 })();

@@ -13,6 +13,16 @@ python3 -m http.server 8080 --bind 0.0.0.0
 # open http://localhost:8080
 ```
 
+## 🔌 hoolulu-factory backend (optional)
+
+The clone can use your local **hoolulu-factory** as its primary brain. Click **⚙ Backend settings** in the top bar, enter your factory URL (default `http://localhost:8000`), and hit *Test connection*. Priority becomes:
+
+```
+🏭 hoolulu-factory  →  🌐 live web  →  📦 offline knowledge base
+```
+
+See **[FACTORY_API.md](FACTORY_API.md)** for the endpoint contract (`/api/health`, `/api/search`, `/api/chat`, `/api/autopilot`), CORS notes, and a ready-to-paste Flask/FastAPI shim. Everything falls back gracefully, so the app never dead-ends even if the factory is off.
+
 ## How it works online 🌐
 
 - Enter any search → the agent fetches live data from the **Wikipedia API** (no API key needed — it uses CORS-enabled endpoints) and synthesizes a Sparkpage: title, sources, hero image, key facts, structured sections, image gallery, related searches.

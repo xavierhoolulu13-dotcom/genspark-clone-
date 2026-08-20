@@ -13,7 +13,7 @@ const { document } = window;
 
 // Run each file as its own script in the shared context — same semantics as <script> tags
 const ctx = dom.getInternalVMContext();
-for (const f of ["assets/js/kb.js", "assets/js/engine.js", "assets/js/app.js"]) {
+for (const f of ["assets/js/kb.js", "assets/js/backend.js", "assets/js/engine.js", "assets/js/app.js"]) {
   new vm.Script(fs.readFileSync(f, "utf8"), { filename: f }).runInContext(ctx);
 }
 

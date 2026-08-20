@@ -1,7 +1,7 @@
 /* GenSpark (clone) service worker — offline-first app shell + smart runtime caching */
 "use strict";
 
-const VERSION = "v1.0.0";
+const VERSION = "v1.1.0";
 const APP_CACHE = "genspark-shell-" + VERSION;
 const RUNTIME_CACHE = "genspark-runtime-" + VERSION;
 
@@ -11,6 +11,7 @@ const APP_SHELL = [
   "manifest.webmanifest",
   "assets/css/styles.css",
   "assets/js/kb.js",
+  "assets/js/backend.js",
   "assets/js/engine.js",
   "assets/js/app.js",
   "assets/icons/icon-192.png",

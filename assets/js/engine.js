@@ -258,6 +258,18 @@ function trunc(s, n) { return s.length > n ? s.slice(0, n - 1).trimEnd() + "…"
 
 /* ---------- master search ---------- */
 async function research(query) {
+  // 1) hoolulu-factory backend, when connected & reachable
+  if (window.Factory?.enabled()) {
+    try {
+      if (await Factory.health()) {
+        const page = await Factory.search(query);
+        if (page) return page;
+      }
+    } catch (err) {
+      console.warn("factory search failed, falling through:", err);
+    }
+  }
+  // 2) live web
   if (navigator.onLine) {
     try {
       return await wikiEnrich(query);
@@ -394,6 +406,35 @@ const Copilot = {
       picked.slice(0, 4).map(s => "• " + trunc(s, 200)).join("\n") +
       (page.facts?.length ? "\n\n⭐ Standout fact: " + page.facts[0].k + " — " + page.facts[0].v : "");
   },
+  /* Async wrapper: lets the hoolulu-factory brain answer open questions when connected.
+     Instant intents (math, time, greetings, summaries, navigation) stay local. */
+  async respondAsync(question, ctx, persona = "spark") {
+    const q = question.trim();
+    const ql = q.toLowerCase();
+    const mathCandidate = ql.replace(/what\s+is|calculate|compute|solve|equals?/g, "").trim();
+    const localOnly =
+      /^(hi|hii+|hello|hey|yo|sup|good (morning|afternoon|evening))\b/.test(ql) ||
+      /thank|who are you|what are you|^help$|what can you do/.test(ql) ||
+      /\b(time|what time)\b/.test(ql) || /\b(date|today|what day)\b/.test(ql) ||
+      /^(search|look up|find)\s+/.test(ql) || /open (home|search)/.test(ql) ||
+      (/^[\d\s+\-*/().^%]+$/.test(mathCandidate) && /[+\-*/^%]/.test(mathCandidate)) ||
+      /summar|tldr|tl;dr|key points|main points/.test(ql) ||
+      /^(facts|key facts|quick facts)/.test(ql) ||
+      /related|similar|what else|more like/.test(ql) ||
+      /source|citation|trust/.test(ql);
+
+    if (!localOnly && window.Factory?.enabled() && await Factory.health()) {
+      try {
+        const answer = await Factory.chat(q, { page: ctx?.page, persona });
+        if (answer && typeof answer === "string") {
+          const P = this.personaPrompts[persona] || this.personaPrompts.spark;
+          return [this.flavor(answer, persona) + "\n— answered by 🏭 hoolulu-factory", "hoolulu-factory"];
+        }
+      } catch (e) { console.warn("factory chat failed, using local brain:", e); }
+    }
+    return this.respond(q, ctx, persona);
+  },
+
   qaOnText(question, text, srcName) {
     const kw = keywords(question).filter(k => k.length > 2);
     if (!kw.length || !text) return null;
